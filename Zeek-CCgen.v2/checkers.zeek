@@ -24,8 +24,7 @@ export {
     #check packet for a ttl that deviates from the ttl defined in conf.zeek
     function check_ttl(c: connection, ipv4_header: ip4_hdr){
             if (ipv4_header$ttl !in CCgenDetector::allowed_ttls){
-                print fmt("Found deviating TTL: %d ", ipv4_header$ttl);
-
+                #print fmt("Found deviating TTL: %d ", ipv4_header$ttl);
                 NOTICE([$note=CCgenDetector::Potential_TTL_Covert_Channel,
                         $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TTL !",
                         $sub=fmt("Found TTL of %s (not allowed)", ipv4_header$ttl),
@@ -53,11 +52,11 @@ export {
     }
 
     # -- Disclaimer --
-    # This check will most likely produce false positives in a "normal" data flow
+    # This check will produce false positives in a "normal" data flow!
     # in a data flow modified by CCgen ipid_v2s however it will achieve 100% true positives
     # -- Disclaimer --
     function check_id(c: connection, ipv4_header: ip4_hdr){
-        #in the baseline ICS network analyzed in my work the IP ID increments by one for each packet
+        #in the baseline ICS network analyzed in my work the IP ID increments by one for each packet on the analyzed device
         # with CCgen.v2 ipid_v2s the secret message is embedded one to one (up to 8 bits per packet) in the ID field. 
         
         #get globally unique connection identifier from connection object 
@@ -69,7 +68,7 @@ export {
                 local last_id = packet_record_to_address$id;
                 local last_time = packet_record_to_address$timestamp;
                 local idSet = packet_record_to_address$idSet;
-                print fmt("checking connection uid: %s | addr: %s, dst: %s, ip id: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, last_id);
+                #print fmt("checking connection uid: %s | addr: %s, dst: %s, ip id: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, last_id);
 
                 #boolean to check if a covert channel is suspected/found
                 local cc_found = F;
@@ -87,9 +86,10 @@ export {
                 }
                 
                 if (cc_found){
+                    #print fmt(" [IP ID Field] id channel found in connection id: %s | addr: %s, dst: %s, ip id: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, last_id);
                           NOTICE([$note=CCgenDetector::Potential_IP_Identifcation_Covert_Channel,
                             $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using IP ID Field !",
-                                $sub=fmt("Found IDs that do not increment | old: %s ; new: %d", last_id, ipv4_header$id),
+                                $sub=fmt("Found duplicate or modulo 256 IDs  | previous id: %s <-> current id: %d", last_id, ipv4_header$id),
                                 $src=ipv4_header$src,
                                 $conn=c,
                                 $n=8]);
@@ -111,18 +111,14 @@ export {
             #print fmt("connection new, adding to connection_table_IP_ids: %s", connection_u_id);
             local newSet: set[int] = {ipv4_header$id};
             local packet_record_tmp = packetRecord($id = ipv4_header$id, $timestamp = network_time(), $idSet = newSet);
-            local table_tmp: table[addr] of packetRecord = {
-                [ipv4_header$src] = packet_record_tmp,
-            };
-            print fmt("%s", table_tmp);
+            local table_tmp: table[addr] of packetRecord = {[ipv4_header$src] = packet_record_tmp,};
             connection_table_IP_ids[connection_u_id]= table_tmp;
         }
     }
 
     function check_tos(c: connection, ipv4_header: ip4_hdr){
-        
         if (ipv4_header$tos > 0){
-            print fmt("TOS of > 0 found: %d", ipv4_header$tos);
+            #print fmt(" [TOS] tos channel found in connection id: %s | addr: %s, dst: %s, tos: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, ipv4_header$tos);
             NOTICE([$note=CCgenDetector::Potential_IP_TOS_Covert_Channel,
                     $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TOS/DSCP field !",
                     $sub=fmt("Found non zero TOS/DSCP: %s", ipv4_header$tos),

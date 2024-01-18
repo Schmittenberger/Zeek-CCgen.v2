@@ -9,9 +9,18 @@
 
 @load ./conf
 @load ./checkers
+global const max_prints_const = CCgenDetector::max_prints;
 
 
 event new_packet(c: connection, p: pkt_hdr){
+
+
+	#ignore ICMP packets - they create false positives for the TOS/DSCP covert channel checker
+	# and CCgen does not modify ICMP packets in out lab setup! Of course verify this for your use case
+	if (p ?$ icmp){
+		return;
+	}
+
 	# access a field value, e.g. get ip layer from packet: p$ip
 	# check if a ipv4 field exists in the packet header: p ?$ ip
 	if (p ?$ ip){
@@ -28,40 +37,47 @@ event new_packet(c: connection, p: pkt_hdr){
 		# print fmt("  offset: %d", ipv4_header$offset);
 		# print fmt("  Checksum: %d", ipv4_header$sum);
 
-	#Check TTL for a covert channel
-	if (CCgenDetector::check_for_ttl_cc){
-		CCgenCheckers::check_ttl(c,ipv4_header);
+		#Check TTL for a covert channel
+		if (CCgenDetector::check_for_ttl_cc){
+			CCgenCheckers::check_ttl(c,ipv4_header);
+		}
+
+		# Check for a IP Flags covert channel
+		# # zeek does not natively offer up the Reserved Bit Flag - TODO
+		# check if the reserved bit flag is set, then raise notice that a flag covert channel might be in use
+		if (CCgenDetector::check_for_flags_cc){
+			#CCgenCheckers::check_flags(c,ipv4_header)
+		}
+
+		# Check for a IP Identifcation covert channel
+		# check for sus ids - not incrementing - or randomly changing
+		if (CCgenDetector::check_for_identifcation_cc){
+			CCgenCheckers::check_id(c,ipv4_header);
+		}
+
+		# Check for a IP Type of Service / DSCP covert channel
+		# check for non zero TOS
+		if (CCgenDetector::check_for_tos_cc){
+			CCgenCheckers::check_tos(c,ipv4_header);
+		}
+
 	}
 
-	# Check for a IP Flags covert channel
-	# # zeek does not natively offer up the Reserved Bit Flag - TODO
-	# check if the reserved bit flag is set, then raise notice that a flag covert channel might be in use
-	if (CCgenDetector::check_for_flags_cc){
-		#CCgenCheckers::check_flags(c,ipv4_header)
-	}
 
-	# Check for a IP Identifcation covert channel
-	# check for sus ids - not incrementing - or randomly changing
-	if (CCgenDetector::check_for_identifcation_cc){
-		CCgenCheckers::check_id(c,ipv4_header);
-	}
-
-	# Check for a IP Type of Service / DSCP covert channel
-	# check for non zero TOS
-	if (CCgenDetector::check_for_tos_cc){
-		CCgenCheckers::check_tos(c,ipv4_header);
-	}
-
-	}
 }
 
 #check tcp packet - fired for each packet which contains a tcp part
 event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: count, len: count, payload: string){
 	if (CCgenDetector::max_prints >0) {
-		print fmt("  Max prints: %s", CCgenDetector::max_prints);
+		print fmt("Debug prints: %d of %d", CCgenDetector::max_prints, max_prints_const);
 		print fmt("  Destination Port #: %s", c$id$resp_p);
 		print fmt("  connection id: %s", c$uid);
 		print fmt("  connection #: %s", c);
+		
+		if (CCgenDetector::max_prints == 1){
+			print fmt("[Debug:] Packet debug print limit (max_prints in conf.zeek) reached.");
+			print fmt("[Debug:] No more packet info will be printed from now on.");
+		}
 		--CCgenDetector::max_prints;
 	}
 
