@@ -1,0 +1,17 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	conn
+#open	2024-01-25-11-05-41
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	proto	service	duration	orig_bytes	resp_bytes	conn_state	local_orig	local_resp	missed_bytes	history	orig_pkts	orig_ip_bytes	resp_pkts	resp_ip_bytes	tunnel_parents
+#types	time	string	addr	port	addr	port	enum	string	interval	count	count	string	bool	bool	count	string	count	count	count	count	set[string]
+1697831122.614316	CXHSwD4BhCP8T1DQqf	192.168.0.59	55453	141.44.1.1	53	udp	dns	0.000037	74	0	S0	T	F	0	D	2	130	0	0	-
+1697831127.616019	CYNjdp2YVP4rxas732	192.168.0.59	51091	141.44.1.2	53	udp	dns	0.000041	74	0	S0	T	F	0	D	2	130	0	0	-
+1697831132.619959	CKI9y71hVvlJQrXMla	192.168.0.59	55453	141.44.1.1	53	udp	dns	0.000021	74	0	S0	T	F	0	D	2	130	0	0	-
+1697831137.623950	CEHaQy1XgdQQA8uky6	192.168.0.59	51091	141.44.1.2	53	udp	dns	0.000014	74	0	S0	T	F	0	D	2	130	0	0	-
+1697831142.629057	Cwutam4ggUHXzhkqT9	192.168.0.59	52111	141.44.1.1	53	udp	dns	0.000033	74	0	S0	T	F	0	D	2	130	0	0	-
+1697831106.891171	Cb0vJI2Mveg6KWO4Ff	192.168.0.59	52606	192.168.0.55	102	tcp	-	37.116844	5819	3305	RSTR	T	T	0	ShADdFar	301	17879	153	9429	-
+1697831114.415106	CVyEm63oZaMvOAY4K9	192.168.0.1	48638	255.255.255.255	29810	udp	-	20.360529	1359	0	S0	T	T	0	D	3	1443	0	0	-
+1697831104.254804	CCK0Q51eGrX0GRUBEj	192.168.0.1	47095	255.255.255.255	29810	udp	-	-	-	-	S0	T	T	0	D	1	481	0	0	-
+#close	2024-01-25-11-05-41

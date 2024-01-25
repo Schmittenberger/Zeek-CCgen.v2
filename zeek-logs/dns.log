@@ -1,0 +1,19 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	dns
+#open	2024-01-25-11-05-41
+#fields	ts	uid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	proto	trans_id	rtt	query	qclass	qclass_name	qtype	qtype_name	rcode	rcode_name	AA	TC	RD	RA	Z	answers	TTLs	rejected
+#types	time	string	addr	port	addr	port	enum	count	interval	string	count	string	count	string	count	string	bool	bool	bool	bool	count	vector[string]	vector[interval]	bool
+1697831122.614316	CXHSwD4BhCP8T1DQqf	192.168.0.59	55453	141.44.1.1	53	udp	1727	-	spocs.getpocket.com	1	C_INTERNET	1	A	-	-	F	F	T	F	0	-	-	F
+1697831122.614353	CXHSwD4BhCP8T1DQqf	192.168.0.59	55453	141.44.1.1	53	udp	3460	-	spocs.getpocket.com	1	C_INTERNET	28	AAAA	-	-	F	F	T	F	0	-	-	F
+1697831127.616019	CYNjdp2YVP4rxas732	192.168.0.59	51091	141.44.1.2	53	udp	1727	-	spocs.getpocket.com	1	C_INTERNET	1	A	-	-	F	F	T	F	0	-	-	F
+1697831127.616060	CYNjdp2YVP4rxas732	192.168.0.59	51091	141.44.1.2	53	udp	3460	-	spocs.getpocket.com	1	C_INTERNET	28	AAAA	-	-	F	F	T	F	0	-	-	F
+1697831132.619959	CKI9y71hVvlJQrXMla	192.168.0.59	55453	141.44.1.1	53	udp	1727	-	spocs.getpocket.com	1	C_INTERNET	1	A	-	-	F	F	T	F	0	-	-	F
+1697831132.619980	CKI9y71hVvlJQrXMla	192.168.0.59	55453	141.44.1.1	53	udp	3460	-	spocs.getpocket.com	1	C_INTERNET	28	AAAA	-	-	F	F	T	F	0	-	-	F
+1697831137.623950	CEHaQy1XgdQQA8uky6	192.168.0.59	51091	141.44.1.2	53	udp	1727	-	spocs.getpocket.com	1	C_INTERNET	1	A	-	-	F	F	T	F	0	-	-	F
+1697831137.623964	CEHaQy1XgdQQA8uky6	192.168.0.59	51091	141.44.1.2	53	udp	3460	-	spocs.getpocket.com	1	C_INTERNET	28	AAAA	-	-	F	F	T	F	0	-	-	F
+1697831142.629057	Cwutam4ggUHXzhkqT9	192.168.0.59	52111	141.44.1.1	53	udp	42866	-	spocs.getpocket.com	1	C_INTERNET	1	A	-	-	F	F	T	F	0	-	-	F
+1697831142.629090	Cwutam4ggUHXzhkqT9	192.168.0.59	52111	141.44.1.1	53	udp	5503	-	spocs.getpocket.com	1	C_INTERNET	28	AAAA	-	-	F	F	T	F	0	-	-	F
+#close	2024-01-25-11-05-41

@@ -1,0 +1,11 @@
+#separator \x09
+#set_separator	,
+#empty_field	(empty)
+#unset_field	-
+#path	analyzer
+#open	2024-01-25-11-05-41
+#fields	ts	cause	analyzer_kind	analyzer_name	uid	fuid	id.orig_h	id.orig_p	id.resp_h	id.resp_p	failure_reason	failure_data
+#types	time	string	string	string	string	string	addr	port	addr	port	string	string
+1697831104.254804	violation	packet	TEREDO	CCK0Q51eGrX0GRUBEj	-	192.168.0.1	47095	255.255.255.255	29810	Truncated Teredo or invalid inner IP version	\x00\x00\x01\xc1{"header":{"version":"1.2.0","mac":"
+1697831114.415106	violation	packet	TEREDO	CVyEm63oZaMvOAY4K9	-	192.168.0.1	48638	255.255.255.255	29810	Truncated Teredo or invalid inner IP version	\x00\x00\x01\xc1{"header":{"version":"1.2.0","mac":"
+#close	2024-01-25-11-05-41
