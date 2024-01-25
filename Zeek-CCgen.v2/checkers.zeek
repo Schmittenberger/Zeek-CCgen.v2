@@ -1,7 +1,7 @@
 #
 # Covert Channel Checker Functions
 #
-@load ./conf
+#@load ./conf # not needed
 
 module CCgenCheckers;
 

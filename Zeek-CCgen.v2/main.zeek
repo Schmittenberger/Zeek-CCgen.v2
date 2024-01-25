@@ -9,7 +9,7 @@
 
 @load ./conf
 @load ./checkers
-global const max_prints_const = CCgenDetector::max_prints;
+global max_prints_const = CCgenDetector::max_prints;
 
 
 event new_packet(c: connection, p: pkt_hdr){
