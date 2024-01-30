@@ -28,5 +28,5 @@ export {
 	global allowed_ttls = [40, 60, 64];
 
 	# to prevent console spam configure max prints
-	global max_prints = 10;
+	global max_prints = 50;
 }

@@ -12,6 +12,20 @@
 global max_prints_const = CCgenDetector::max_prints;
 
 
+event bogus(){
+	print fmt("bogus event called");
+}
+event URG_feature_event(c : connection, URG_flag : count, URG_ptr : count){
+	print fmt("URG FEAUTURE EVENT!!!");
+}
+event URG_test(c : connection){
+	#print fmt("URG_test URG_test EVENT!!!");
+}
+
+# event s7_ackdata_write_data(c: connection, header: S7Comm::S7Header, items: count, item_num: count, return_code: count) {
+# 	#print fmt("s7_ackdata_write_data EVENT!!!");
+# }
+
 event new_packet(c: connection, p: pkt_hdr){
 
 
@@ -67,12 +81,15 @@ event new_packet(c: connection, p: pkt_hdr){
 }
 
 #check tcp packet - fired for each packet which contains a tcp part
-event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: count, len: count, payload: string){
+event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: count, len: count, payload: string, urgent: int){
 	if (CCgenDetector::max_prints >0) {
 		print fmt("Debug prints: %d of %d", CCgenDetector::max_prints, max_prints_const);
-		print fmt("  Destination Port #: %s", c$id$resp_p);
-		print fmt("  connection id: %s", c$uid);
-		print fmt("  connection #: %s", c);
+		# print fmt("  Destination Port #: %s", c$id$resp_p);
+		# print fmt("  connection id: %s", c$uid);
+		# print fmt("  connection #: %s", c);
+		print fmt("  ack #: %s", ack);
+		print fmt("  seq #: %s", seq);
+		print fmt("  urgent #: %d", urgent);
 		
 		if (CCgenDetector::max_prints == 1){
 			print fmt("[Debug:] Packet debug print limit (max_prints in conf.zeek) reached.");
@@ -84,7 +101,7 @@ event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: c
 	# Check for a TCP Urgent Pointer covert channel
 	# 
 	if (CCgenDetector::check_for_urgent_pointer_cc){
-		#CCgenCheckers::check_urgent_pointer(c,p$);
+		CCgenCheckers::check_urgent_pointer(c,flags, urgent);
 	}
 	
 

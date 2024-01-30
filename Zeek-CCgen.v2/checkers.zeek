@@ -129,16 +129,27 @@ export {
             
     }
 
-    # TODO
-    function check_urgent_pointer(c: connection, tcp_header: tcp_hdr){
-        
+    function check_urgent_pointer(c: connection, flags: string, urgent: int){
+        local urg_flag = F;
+        #check flags for urgent flag
+        for (i in flags){
+            if (i == "U"){
+                print fmt("Urgent Flag is set!!");
+                urg_flag = T;
+                }
+        }
 
-
-                NOTICE([$note=CCgenDetector::Potential_IP_Urgent_Pointer_Covert_Channel,
-                      $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer !",
-                        $sub=fmt("Found Urgent_Pointer channel"),
-                        $conn=c,
-                        $n=8]);
+        #The TCP RFC defines that a Urgent Flag indicates that the content of the Urgent Pointer is relevant
+        # if the urgent pointer has non null content with an unset URG flag, then it is not following expected behavior
+        # --> most probable a suspicous communication which should be alerted of
+        if (urgent > 0 && !urg_flag){
+            print fmt("[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer %s %d",urg_flag, urgent);
+            NOTICE([$note=CCgenDetector::Potential_IP_Urgent_Pointer_Covert_Channel,
+                    $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer !",
+                    $sub=fmt("Found Urgent_Pointer channel"),
+                    $conn=c,
+                    $n=8]);
+        }
             
     }
 
