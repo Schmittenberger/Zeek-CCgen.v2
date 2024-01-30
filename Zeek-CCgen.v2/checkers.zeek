@@ -36,19 +36,16 @@ export {
 
     # check the packet for a reserved bit flag - but this is not available in native zeek :(
     function check_flags(c: connection, ipv4_header: ip4_hdr){
-        
-		# if (ipv4_header$RF == 1){
-			# print fmt("Reserved bit flag is set! ");
-			# TODO: Raise notice!
-		# }
-
-                NOTICE([$note=CCgenDetector::Potential_IP_Flags_Covert_Channel,
-                      $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using the reserved bit flag !",
-                        $sub=fmt("Found reserved bit in use %s", ipv4_header),
-                        $src=ipv4_header$src,
-                        $conn=c,
-                        $n=8]);
-            
+		if (ipv4_header$RF == T){
+			#print fmt("Reserved bit flag is set! ");
+			#Raise notice!
+            NOTICE([$note=CCgenDetector::Potential_IP_Flags_Covert_Channel,
+                $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using the reserved bit flag !",
+                $sub=fmt("Found reserved bit in use %s", ipv4_header),
+                $src=ipv4_header$src,
+                $conn=c,
+                $n=8]);
+		}     
     }
 
     # -- Disclaimer --

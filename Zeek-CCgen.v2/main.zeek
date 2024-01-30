@@ -60,7 +60,7 @@ event new_packet(c: connection, p: pkt_hdr){
 		# # zeek does not natively offer up the Reserved Bit Flag - TODO
 		# check if the reserved bit flag is set, then raise notice that a flag covert channel might be in use
 		if (CCgenDetector::check_for_flags_cc){
-			#CCgenCheckers::check_flags(c,ipv4_header)
+			CCgenCheckers::check_flags(c,ipv4_header);
 		}
 
 		# Check for a IP Identifcation covert channel
