@@ -180,7 +180,7 @@ export {
         if (urgent > 0 && !urg_flag){
             if (cc_threshold(c$uid, "URG")){
                 #print fmt("[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer %s %d",urg_flag, urgent);
-                NOTICE([$note=CCgenDetector::Potential_IP_Urgent_Pointer_Covert_Channel,
+                NOTICE([$note=CCgenDetector::Potential_TCP_Urgent_Pointer_Covert_Channel,
                         $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer !",
                         $sub=fmt("Found Urgent_Pointer channel"),
                         $conn=c,

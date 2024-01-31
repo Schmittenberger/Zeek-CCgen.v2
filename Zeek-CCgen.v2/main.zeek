@@ -66,7 +66,7 @@ event new_packet(c: connection, p: pkt_hdr){
 event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: count, len: count, payload: string, urgent: int){
 	if (CCgenDetector::max_prints >0) {
 		print fmt("Debug prints: %d of %d", CCgenDetector::max_prints, max_prints_const);
-		print fmt("  connection #: %s", c);
+		#print fmt("  connection #: %s", c);
 		print fmt("  seq #: %s", seq);
 		print fmt("  urgent #: %d", urgent);
 		

@@ -10,7 +10,7 @@ export {
 	redef enum Notice::Type += { Potential_IP_Flags_Covert_Channel };
 	redef enum Notice::Type += { Potential_IP_Identifcation_Covert_Channel };
 	redef enum Notice::Type += { Potential_IP_TOS_Covert_Channel };
-	redef enum Notice::Type += { Potential_IP_Urgent_Pointer_Covert_Channel };
+	redef enum Notice::Type += { Potential_TCP_Urgent_Pointer_Covert_Channel };
 
 	# CONFIG
 
