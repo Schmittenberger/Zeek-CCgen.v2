@@ -1,1 +1,1 @@
-Zeek script to detect covert channels created with CCgen.v2 in development
+Zeek script to detect covert channels created with CCgen.v2

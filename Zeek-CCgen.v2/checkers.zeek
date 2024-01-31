@@ -1,7 +1,6 @@
 #
 # Covert Channel Checker Functions
 #
-#@load ./conf # not needed
 
 module CCgenCheckers;
 
@@ -20,17 +19,50 @@ type packetRecord: record {
 # used to find out if a sender is using a covert channel with IP ids - that needs to be seperated by connection and address
 global connection_table_IP_ids: table[string] of table[addr] of packetRecord;
 
+#a table of connection ids, that maps to a table of covert channel strings that yields an integer
+# use to count how many times a covert channel has been found for a given connection
+# e.g. CM7Jio2CXB3sYGLrJ1 -> ["TTL": 3]
+global connection_ids_to_covert_channel: table[string] of table[string] of int;
+
+#function to store the occurences of covert channels for a given connection id
+# returns true once if the exact covert_channel_threshold is reached
+# used to stop spamming the notice log
+function cc_threshold(uid: string, covert_channel: string): bool{
+    #if the connection id has been seen before
+    if (uid in connection_ids_to_covert_channel){
+        if(covert_channel in connection_ids_to_covert_channel[uid]){
+            connection_ids_to_covert_channel[uid][covert_channel] += 1;
+            #if the covert channel has been discovered more than the times allowed in the conf.zeek
+            # then raise notice aka return T (true) to raise a notice in the calling function
+            if(connection_ids_to_covert_channel[uid][covert_channel] == CCgenDetector::covert_channel_threshold){
+                return T;
+            }
+        } else {
+            #connection has been saved to table before, but not the covert channel
+            connection_ids_to_covert_channel[uid][covert_channel] = 1;
+        }
+    } else {
+        #the connection is being added for the first time,
+        # set the amount of times the covert channel has been detected to 1
+        local tmp: table[string] of int = {[covert_channel] = 1};
+        connection_ids_to_covert_channel[uid] = tmp;        
+    }
+    return F;
+}
+
 export {
     #check packet for a ttl that deviates from the ttl defined in conf.zeek
     function check_ttl(c: connection, ipv4_header: ip4_hdr){
             if (ipv4_header$ttl !in CCgenDetector::allowed_ttls){
-                #print fmt("Found deviating TTL: %d ", ipv4_header$ttl);
-                NOTICE([$note=CCgenDetector::Potential_TTL_Covert_Channel,
-                        $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TTL !",
-                        $sub=fmt("Found TTL of %s (not allowed)", ipv4_header$ttl),
-                        $src=ipv4_header$src,
-                        $conn=c,
-                        $n=8]);
+                if (cc_threshold(c$uid, "TTL")){
+                    #print fmt("Found deviating TTL: %d ", ipv4_header$ttl);
+                    NOTICE([$note=CCgenDetector::Potential_TTL_Covert_Channel,
+                            $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TTL !",
+                            $sub=fmt("Found TTL of %s (not allowed)", ipv4_header$ttl),
+                            $src=ipv4_header$src,
+                            $conn=c,
+                            $n=8]);
+                }
             }
     }
 
@@ -39,12 +71,14 @@ export {
 		if (ipv4_header$RF == T){
 			#print fmt("Reserved bit flag is set! ");
 			#Raise notice!
-            NOTICE([$note=CCgenDetector::Potential_IP_Flags_Covert_Channel,
-                $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using the reserved bit flag !",
-                $sub=fmt("Found reserved bit in use %s", ipv4_header),
-                $src=ipv4_header$src,
-                $conn=c,
-                $n=8]);
+            if (cc_threshold(c$uid, "flags")){
+                NOTICE([$note=CCgenDetector::Potential_IP_Flags_Covert_Channel,
+                    $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using the reserved bit flag !",
+                    $sub=fmt("Found reserved bit in use %s", ipv4_header),
+                    $src=ipv4_header$src,
+                    $conn=c,
+                    $n=8]);
+            }
 		}     
     }
 
@@ -83,6 +117,7 @@ export {
                 }
                 
                 if (cc_found){
+                    if (cc_threshold(c$uid, "ID")){
                     #print fmt(" [IP ID Field] id channel found in connection id: %s | addr: %s, dst: %s, ip id: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, last_id);
                           NOTICE([$note=CCgenDetector::Potential_IP_Identifcation_Covert_Channel,
                             $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using IP ID Field !",
@@ -90,6 +125,7 @@ export {
                                 $src=ipv4_header$src,
                                 $conn=c,
                                 $n=8]);
+                    }
                 }
                 #add current ip id to set, to check later if duplicate ids are used
                 add idSet[ipv4_header$id];
@@ -115,13 +151,15 @@ export {
 
     function check_tos(c: connection, ipv4_header: ip4_hdr){
         if (ipv4_header$tos > 0){
-            #print fmt(" [TOS] tos channel found in connection id: %s | addr: %s, dst: %s, tos: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, ipv4_header$tos);
-            NOTICE([$note=CCgenDetector::Potential_IP_TOS_Covert_Channel,
-                    $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TOS/DSCP field !",
-                    $sub=fmt("Found non zero TOS/DSCP: %s", ipv4_header$tos),
-                    $src=ipv4_header$src,
-                    $conn=c,
-                    $n=8]);
+            if (cc_threshold(c$uid, "TOS")){
+                #print fmt(" [TOS] tos channel found in connection id: %s | addr: %s, dst: %s, tos: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, ipv4_header$tos);
+                NOTICE([$note=CCgenDetector::Potential_IP_TOS_Covert_Channel,
+                        $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TOS/DSCP field !",
+                        $sub=fmt("Found non zero TOS/DSCP: %s", ipv4_header$tos),
+                        $src=ipv4_header$src,
+                        $conn=c,
+                        $n=8]);
+            }
         }
             
     }
@@ -131,7 +169,7 @@ export {
         #check flags for urgent flag
         for (i in flags){
             if (i == "U"){
-                print fmt("Urgent Flag is set!!");
+                #print fmt("Urgent Flag is set!!");
                 urg_flag = T;
                 }
         }
@@ -140,12 +178,14 @@ export {
         # if the urgent pointer has non null content with an unset URG flag, then it is not following expected behavior
         # --> most probable a suspicous communication which should be alerted of
         if (urgent > 0 && !urg_flag){
-            print fmt("[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer %s %d",urg_flag, urgent);
-            NOTICE([$note=CCgenDetector::Potential_IP_Urgent_Pointer_Covert_Channel,
-                    $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer !",
-                    $sub=fmt("Found Urgent_Pointer channel"),
-                    $conn=c,
-                    $n=8]);
+            if (cc_threshold(c$uid, "URG")){
+                #print fmt("[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer %s %d",urg_flag, urgent);
+                NOTICE([$note=CCgenDetector::Potential_IP_Urgent_Pointer_Covert_Channel,
+                        $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer !",
+                        $sub=fmt("Found Urgent_Pointer channel"),
+                        $conn=c,
+                        $n=8]);
+            }
         }
             
     }

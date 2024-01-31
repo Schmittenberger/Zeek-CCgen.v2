@@ -4,4 +4,7 @@
 # if you installed zeek from binaries it will by default be installed in /opt/zeek/bin/, then use:
 /opt/zeek/bin/zeek -Cr test/baseline-sample.pcap Zeek-CCgen.v2
 
-#This will produce a lot of logs.
+#This will log covert channels to the notice.log
+
+#use my Zeek-TCP-Urgent-Pointer-fork to also detect TCP Urgent Pointer and IP flags covert channels!
+# check Readme.md for more info
