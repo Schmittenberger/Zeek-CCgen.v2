@@ -1,6 +1,8 @@
 #if you built zeek from the source repo (https://github.com/zeek/zeek) and with default install dir with make:
 /usr/local/zeek/bin/zeek -Cr test/baseline-sample.pcap Zeek-CCgen.v2
 
+
+
 # if you installed zeek from binaries it will by default be installed in /opt/zeek/bin/, then use:
 /opt/zeek/bin/zeek -Cr test/baseline-sample.pcap Zeek-CCgen.v2
 
@@ -8,3 +10,6 @@
 
 #use my Zeek-TCP-Urgent-Pointer-fork to also detect TCP Urgent Pointer and IP flags covert channels!
 # check Readme.md for more info
+
+#if you built zeek from my fork:
+/usr/local/zeek-fork/bin/zeek -Cr test/baseline-sample.pcap Zeek-CCgen.v2

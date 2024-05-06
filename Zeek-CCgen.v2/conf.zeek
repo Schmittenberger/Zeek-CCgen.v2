@@ -35,4 +35,10 @@ export {
 
 	# to prevent console spam configure max debug prints
 	global max_prints = 5;
+
+	#count amount of packets. used to know when to start attribution
+	global packet_counter = 0;
+
+	#threshold to start attribution
+	global count_threshold_attribute = 0;
 }

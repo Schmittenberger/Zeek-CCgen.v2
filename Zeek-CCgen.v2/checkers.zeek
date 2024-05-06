@@ -24,6 +24,10 @@ global connection_table_IP_ids: table[string] of table[addr] of packetRecord;
 # e.g. CM7Jio2CXB3sYGLrJ1 -> ["TTL": 3]
 global connection_ids_to_covert_channel: table[string] of table[string] of int;
 
+
+# table of covert payloads
+global covert_values_detected: vector of int;
+
 #function to store the occurences of covert channels for a given connection id
 # returns true once if the exact covert_channel_threshold is reached
 # used to stop spamming the notice log
@@ -50,12 +54,33 @@ function cc_threshold(uid: string, covert_channel: string): bool{
     return F;
 }
 
+# simple approximation square function because Zeek does offer one
+function sqrt_because_zeek_has_none(n: double): double{
+    local x: double = 1;
+    local i: int = 0;
+
+    while ( i < 15){
+        ++i;
+        x = (x+n/x)/2;
+
+    }
+    print fmt("square n %s %s", n, x);
+    return x;
+}
+
 export {
     #check packet for a ttl that deviates from the ttl defined in conf.zeek
     function check_ttl(c: connection, ipv4_header: ip4_hdr){
-            if (ipv4_header$ttl !in CCgenDetector::allowed_ttls){
+            if (ipv4_header$ttl !in CCgenDetector::allowed_ttls){   
+                # add value to covert value table to analyse later for behaviour
+                print fmt("adding TTL to covert_values_detected: %s", ipv4_header$ttl);
+                covert_values_detected += ipv4_header$ttl;
+                # print covert_values_detected;
                 if (cc_threshold(c$uid, "TTL")){
-                    #print fmt("Found deviating TTL: %d ", ipv4_header$ttl);
+                    print fmt("Found deviating TTL: %d ", ipv4_header$ttl);
+                    
+          
+
                     NOTICE([$note=CCgenDetector::Potential_TTL_Covert_Channel,
                             $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TTL !",
                             $sub=fmt("Found TTL of %s (not allowed)", ipv4_header$ttl),
@@ -68,10 +93,15 @@ export {
 
     # check the packet for a reserved bit flag - but this is not available in native zeek :(
     function check_flags(c: connection, ipv4_header: ip4_hdr){
+        
 		if (ipv4_header$RF == T){
 			#print fmt("Reserved bit flag is set! ");
 			#Raise notice!
+                    # add value to covert value table to analyse later for behaviour
+                    print fmt("adding reserved bit flag to covert_values_detected: %s", ipv4_header$RF);
+                    covert_values_detected += 1;
             if (cc_threshold(c$uid, "flags")){
+      
                 NOTICE([$note=CCgenDetector::Potential_IP_Flags_Covert_Channel,
                     $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using the reserved bit flag !",
                     $sub=fmt("Found reserved bit in use %s", ipv4_header),
@@ -117,6 +147,9 @@ export {
                 }
                 
                 if (cc_found){
+                         # add value to covert value table to analyse later for behaviour
+                        print fmt("adding ipid to covert_values_detected: %s", ipv4_header$id);
+                        covert_values_detected += ipv4_header$id;
                     if (cc_threshold(c$uid, "ID")){
                     #print fmt(" [IP ID Field] id channel found in connection id: %s | addr: %s, dst: %s, ip id: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, last_id);
                           NOTICE([$note=CCgenDetector::Potential_IP_Identifcation_Covert_Channel,
@@ -151,7 +184,12 @@ export {
 
     function check_tos(c: connection, ipv4_header: ip4_hdr){
         if (ipv4_header$tos > 0){
+                     # add value to covert value table to analyse later for behaviour
+                        print fmt("adding tos to covert_values_detected: %s", ipv4_header$tos);
+                        covert_values_detected += ipv4_header$tos;
+                        print ipv4_header;
             if (cc_threshold(c$uid, "TOS")){
+               
                 #print fmt(" [TOS] tos channel found in connection id: %s | addr: %s, dst: %s, tos: %d", connection_u_id, ipv4_header$src, ipv4_header$dst, ipv4_header$tos);
                 NOTICE([$note=CCgenDetector::Potential_IP_TOS_Covert_Channel,
                         $msg="[Zeek-CCgen.v2] Potential Covert Channel identified using TOS/DSCP field !",
@@ -178,6 +216,11 @@ export {
         # if the urgent pointer has non null content with an unset URG flag, then it is not following expected behavior
         # --> most probable a suspicous communication which should be alerted of
         if (urgent > 0 && !urg_flag){
+
+                   # add value to covert value table to analyse later for behaviour
+                   print fmt("adding urgent pointer to covert_values_detected: %s", urgent);
+                    covert_values_detected += urgent;
+
             if (cc_threshold(c$uid, "URG")){
                 #print fmt("[Zeek-CCgen.v2] Potential Covert Channel identified using Urgent Pointer %s %d",urg_flag, urgent);
                 NOTICE([$note=CCgenDetector::Potential_TCP_Urgent_Pointer_Covert_Channel,
@@ -189,5 +232,56 @@ export {
         }
             
     }
+
+global count_table: table[int] of int;
+    function attribute_channel(){
+        local avg_counting_sum: int = 0;
+        local length: int = 0;
+        
+        print covert_values_detected; 
+        for (value in covert_values_detected){
+            length += 1;
+            # print covert_values_detected[value];
+            # print fmt("count table %s",count_table);
+            # print fmt("INDEX %s", value);
+            # print count_table;
+            if (covert_values_detected[value] in count_table){
+                count_table[covert_values_detected[value]] += 1;
+            } else{
+                count_table[covert_values_detected[value]] = 1;
+            }
+            avg_counting_sum += covert_values_detected[value];
+        }
+        print fmt("length: %s",length);
+        print fmt("avg_counting_sum: %s",avg_counting_sum);
+        if(avg_counting_sum > 0 && length > 0){
+            print fmt("average/mean %s", avg_counting_sum/length);
+        }
+        # calculate standard deviation
+        local mean: int = avg_counting_sum/length;
+        print count_table;
+        print fmt("unique values: %s", |count_table|);
+        
+        local counting_deviation = 0;
+      for (value in covert_values_detected){
+            local tmp: double = covert_values_detected[value]-mean;
+            tmp = tmp * tmp;
+            counting_deviation += tmp;
+        }
+
+        local one_over_N: double = counting_deviation / length;
+        print fmt("1 over N %s", one_over_N);
+
+
+        print fmt("STD: %s", sqrt_because_zeek_has_none(one_over_N));
+
+        if (|count_table| > 10){
+            print "Dynamic and most likely a r2s channel.";
+        } else {
+            print "Static and most likely v2s or derivate channel.";
+        }
+    }
+    
+
 
 }

@@ -10,6 +10,7 @@
 @load ./checkers
 global max_prints_const = CCgenDetector::max_prints;
 
+
 #check each new packet | the docs say this event is resource intensive
 event new_packet(c: connection, p: pkt_hdr){
 	#ignore ICMP packets - they create false positives for the TOS/DSCP covert channel checker
@@ -64,6 +65,7 @@ event new_packet(c: connection, p: pkt_hdr){
 # Warning: the native tcp_packet event does not return the urgent pointer!
 # USE MY Zeek-TCP-Urgent-Pointer-fork to get the urgent pointer from this event
 event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: count, len: count, payload: string, urgent: int){
+	CCgenDetector::packet_counter += 1;
 	if (CCgenDetector::max_prints >0) {
 		print fmt("Debug prints: %d of %d", CCgenDetector::max_prints, max_prints_const);
 		#print fmt("  connection #: %s", c);
@@ -82,5 +84,11 @@ event tcp_packet(c: connection, is_orig: bool, flags: string, seq: count, ack: c
 	if (CCgenDetector::check_for_urgent_pointer_cc){
 		CCgenCheckers::check_urgent_pointer(c,flags, urgent);
 	}
+}
+
+event Pcap::file_done(path: string){
+	print fmt("Finished processing for %s", path);
+		CCgenCheckers::attribute_channel();
+
 }
 
